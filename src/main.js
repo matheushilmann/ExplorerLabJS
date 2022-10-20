@@ -22,18 +22,18 @@ function setCardType(type) {
   ccLogo.setAttribute('src', `cc-${type}.svg`);
 }
 
-setCardType('amex');
+setCardType('default');
 
 globalThis.setCardType = setCardType;
 
-// Security code session
+// Security code
 const securityCode = document.querySelector('#security-code');
 const securityCodePattern = {
   mask: '0000'
 }
 const securityCodeMasked = IMask(securityCode, securityCodePattern);
 
-// Expiration date session
+// Expiration date
 const expirationDate = document.querySelector('#expiration-date');
 const expirationDatePattern = {
   mask: 'MM{/}YY',
@@ -52,7 +52,7 @@ const expirationDatePattern = {
 }
 const expirationDateMasked = IMask(expirationDate, expirationDatePattern);
 
-// Card number session 
+// Card number
 const cardNumber = document.querySelector('#card-number');
 const cardNumberPattern = {
   mask: [
@@ -73,7 +73,7 @@ const cardNumberPattern = {
     },
     {
       mask: '0000 0000 0000 0000',
-      // regex:
+      regex: /^606282|^3841(?:[0|4|6]{1})0/,
       cardtype: 'hiper',
     },
     {
@@ -84,12 +84,60 @@ const cardNumberPattern = {
   dispatch: function (appended, dynamicMasked) {
     const number = (dynamicMasked.value + appended).replace(/\D/g, '');
     const foundMask = dynamicMasked.compiledMasks.find(function(item) {
-      return number.match(item.regex)
+      return number.match(item.regex);
     })
-    console.log(foundMask)
 
-    return foundMask
+    return foundMask;
   }
+};
+
+const cardNumberMasked = IMask(cardNumber, cardNumberPattern);
+
+// Form 
+const addButton = document.querySelector('#add-card');
+addButton.addEventListener('click', () => {
+  alert('Cartão adicionado!');
+})
+
+document.querySelector('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+})
+
+// Virtual Card
+const cardHolder = document.querySelector('#card-holder');
+cardHolder.addEventListener('input', () => {
+  const ccHolder = document.querySelector('.cc-holder .value');
+  
+  ccHolder.innerText = cardHolder.value.length === 0 ? 'FULANO DA SILVA' : cardHolder.value;
+})
+
+securityCodeMasked.on('accept', () => {
+  updateSecurityCode(securityCodeMasked.value);
+})
+
+function updateSecurityCode(code) {
+  const ccSecurity = document.querySelector('.cc-security .value');
+
+  ccSecurity.innerText = code.length === 0 ? '123' : code;
 }
 
-const cardNumberMasked = IMask(cardNumber, cardNumberPattern)
+cardNumberMasked.on('accept', () => {
+  const cardType = cardNumberMasked.masked.currentMask.cardtype;
+  setCardType(cardType);
+  updateCardNumber(cardNumberMasked.value);
+})
+
+function updateCardNumber(number) {
+  const ccNumber = document.querySelector('.cc-number');
+  ccNumber.innerText = number.length === 0 ? '1234 5678 9012 3456' : number;
+}
+
+expirationDateMasked.on('accept', () => {
+  updateExpirationDate(expirationDateMasked.value)
+})
+
+function updateExpirationDate(date) {
+  const ccExpiration = document.querySelector('.cc-extra .value');
+
+  ccExpiration.innerText = date.length === 0 ? '02/32' : date;
+}
